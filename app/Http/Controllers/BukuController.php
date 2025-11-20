@@ -61,4 +61,23 @@ class BukuController extends Controller
             'search' => $request->search ?? '',
         ]);
     }
+
+    public function kategori($kategori)
+{
+    // Ambil semua buku berdasarkan kategori yang diklik
+    $books = Book::where('kategori', $kategori)->paginate(12);
+
+    // Ambil daftar kategori unik (biar dropdown tetap muncul)
+    $kategoriList = Book::select('kategori')->distinct()->pluck('kategori');
+
+    // Kirim ke view yang sama dengan halaman buku utama
+    return view('auth.buku', [
+        'books' => $books,
+        'kategoriList' => $kategoriList,
+        'selectedKategori' => $kategori,
+        'selectedTahun' => '',
+        'search' => '',
+    ]);
+}
+
 }

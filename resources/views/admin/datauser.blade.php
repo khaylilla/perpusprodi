@@ -130,6 +130,21 @@
       </div>
     </a>
 
+    <a href="{{ route('admin.notifikasi') }}" 
+   class="text-decoration-none flex-grow-1"
+   style="max-width: 300px;">
+  <div class="card shadow-sm border-0 text-white"
+       style="background: linear-gradient(135deg, #f7931e, #ffb84d); border-radius: 16px;">
+    <div class="card-body d-flex align-items-center justify-content-between">
+      <div>
+        <h5 class="fw-bold mb-1">Notifikasi</h5>
+        <p class="mb-0 text-light small">Lihat pemberitahuan terbaru</p>
+      </div>
+      <i class="bi bi-bell-fill fs-2 opacity-75"></i>
+    </div>
+  </div>
+</a>
+
     {{-- BUTTON TAMBAH ANGGOTA --}}
   <div class="d-flex align-items-center ms-auto mb-3">
     <button class="btn btn-add" data-bs-toggle="modal" data-bs-target="#createUserModal">

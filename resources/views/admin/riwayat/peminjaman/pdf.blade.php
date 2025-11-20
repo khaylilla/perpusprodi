@@ -9,47 +9,60 @@
             font-size: 12px;
         }
 
-        h2 {
-            text-align: center;
-            margin-bottom: 20px;
+      <!DOCTYPE html>
+
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Daftar Peminjaman Buku</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 10px;
-        }
+```
+    h2 {
+        text-align: center;
+        margin-bottom: 20px;
+    }
 
-        th, td {
-            border: 1px solid #333;
-            padding: 6px;
-            text-align: left;
-        }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 10px;
+    }
 
-        th {
-            background-color: #b8b8b8ff;
-            color: #000000ff;
-            text-align: center;
-        }
+    th, td {
+        border: 1px solid #333;
+        padding: 6px;
+        text-align: left;
+    }
 
-        .badge-dipinjam {
-            background-color: #ffc107;
-            color: #000;
-            padding: 2px 5px;
-            border-radius: 3px;
-        }
+    th {
+        background-color: #b8b8b8ff;
+        color: #000000ff;
+        text-align: center;
+    }
 
-        .badge-kembali {
-            background-color: #28a745;
-            color: #fff;
-            padding: 2px 5px;
-            border-radius: 3px;
-        }
+    .badge-dipinjam {
+        background-color: #ffc107;
+        color: #000;
+        padding: 2px 5px;
+        border-radius: 3px;
+    }
 
-        .text-center {
-            text-align: center;
-        }
-    </style>
+    .badge-kembali {
+        background-color: #28a745;
+        color: #fff;
+        padding: 2px 5px;
+        border-radius: 3px;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+</style>
 </head>
 <body>
     <h2>Daftar Peminjaman Buku</h2>
@@ -67,7 +80,7 @@
             </tr>
         </thead>
         <tbody>
-            @forelse($peminjaman as $index => $p)
+            @forelse($peminjaman->where('status', 'dipinjam') as $index => $p)
             <tr>
                 <td>{{ $index + 1 }}</td>
                 <td>{{ $p->nama }}</td>

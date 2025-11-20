@@ -3,6 +3,13 @@
 @section('page-title', 'Manajemen Data Koleksi')
 
 @section('content')
+@php
+  // pastikan variabel $books tidak ditampilkan otomatis
+  if (isset($books) && $books instanceof \Illuminate\Pagination\LengthAwarePaginator) {
+      $books->withPath(request()->url());
+  }
+@endphp
+
 <style>
   /* === KOTAK INFO === */
   .info-boxes {
@@ -68,24 +75,30 @@
   .search-bar input { border: none; outline: none; flex: 1; font-size: 14px; padding-left: 8px; }
   .search-bar .btn { white-space: nowrap; }
 
+   /* === TABEL === */
   .table-container {
     background-color: white;
     border-radius: 12px;
     box-shadow: 0 3px 10px rgba(0,0,0,0.1);
     overflow-x: auto;
     margin-top: 10px;
+    max-height: 650px; /* batasi tinggi tabel agar scroll jika > 10 baris */
   }
 
   table { margin-bottom: 0; min-width: 1000px; width: 100%; border-collapse: collapse; }
   table th, table td {
-    vertical-align: middle !important;
-    white-space: nowrap;
-    text-align: center;
-    font-size: 14px;
-    padding: 12px 10px;
+    vertical-align: top !important;
+    white-space: normal;
+    text-align: left;
+    font-size: 13px;
+    padding: 8px 6px;
     border: 1px solid #ddd;
   }
   table th { background-color: #f2f2f2; }
+
+  table th.cover-col, table td.cover-col { width: 70px; text-align: center; }
+  table th.qr-col, table td.qr-col { width: 110px; text-align: center; }
+
   .table tbody tr:hover { background-color: #f6f6ff; }
   .action-icons i { font-size: 18px; cursor: pointer; margin: 0 6px; }
   .action-icons .edit { color: #f39c12; }
@@ -189,7 +202,7 @@
       <tbody>
         @forelse($books as $index => $book)
           <tr>
-            <td>{{ $index + 1 }}</td>
+            <td>{{ $loop->iteration }}</td>
             <td>
               @if($book->cover)
                 @foreach(json_decode($book->cover, true) as $path)

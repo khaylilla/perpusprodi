@@ -12,30 +12,33 @@ use PDF;
 class BookController extends Controller
 {
     public function index(Request $request)
-    {
-        $query = Book::query();
+{
+    $query = Book::query();
 
-        if ($request->keyword) {
-            $query->where('judul', 'like', '%'.$request->keyword.'%')
-                  ->orWhere('penulis', 'like', '%'.$request->keyword.'%')
-                  ->orWhere('kategori', 'like', '%'.$request->keyword.'%');
-        }
-
-        if ($request->filter_kategori) {
-            $query->where('kategori', $request->filter_kategori);
-        }
-
-        if ($request->filter_tahun) {
-            $query->where('tahun_terbit', $request->filter_tahun);
-        }
-
-        $books = $query->orderBy('kategori')->orderBy('tahun_terbit')->get();
-
-        $allKategori = Book::select('kategori')->distinct()->pluck('kategori');
-        $allTahun = Book::select('tahun_terbit')->distinct()->pluck('tahun_terbit');
-
-        return view('admin.datakoleksi', compact('books', 'allKategori', 'allTahun'));
+    if ($request->keyword) {
+        $query->where('judul', 'like', '%'.$request->keyword.'%')
+              ->orWhere('penulis', 'like', '%'.$request->keyword.'%')
+              ->orWhere('kategori', 'like', '%'.$request->keyword.'%');
     }
+
+    if ($request->filter_kategori) {
+        $query->where('kategori', $request->filter_kategori);
+    }
+
+    if ($request->filter_tahun) {
+        $query->where('tahun_terbit', $request->filter_tahun);
+    }
+
+    $books = $query->orderBy('kategori')
+               ->orderBy('tahun_terbit')
+               ->get()
+               ->collect();
+
+    $allKategori = Book::select('kategori')->distinct()->pluck('kategori');
+    $allTahun = Book::select('tahun_terbit')->distinct()->pluck('tahun_terbit');
+
+    return view('admin.datakoleksi', compact('books', 'allKategori', 'allTahun'));
+}
 
     public function store(Request $request)
     {

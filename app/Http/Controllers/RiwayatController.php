@@ -86,7 +86,8 @@ class RiwayatController extends Controller
     }
 
     // Proses pengembalian
-    public function prosesPengembalian(Request $request)
+  // Proses pengembalian
+public function prosesPengembalian(Request $request)
 {
     $request->validate([
         'npm' => 'required',
@@ -99,38 +100,54 @@ class RiwayatController extends Controller
     // Cari user
     $user = User::where('npm', $npm)->first();
     if (!$user) {
-        return response()->json(['message' => 'User tidak ditemukan.'], 404);
+        return response()->json([
+            'status' => 'error',
+            'message' => 'User tidak ditemukan.'
+        ], 404);
     }
 
     // Cari buku
     $book = Book::where('nomor_buku', $nomorBuku)->first();
     if (!$book) {
-        return response()->json(['message' => 'Buku tidak ditemukan.'], 404);
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Buku tidak ditemukan.'
+        ], 404);
     }
 
-    // Tambah jumlah buku
-    $book->jumlah += 1;
-
-    // Update status jadi tersedia jika jumlah > 0
-    if ($book->jumlah > 0) {
-        $book->status = 'tersedia';
-    }
-
-    $book->save();
-
-    // Update status peminjaman
+    // Cek apakah buku sedang dipinjam oleh user
     $peminjaman = Peminjaman::where('npm', $npm)
         ->where('nomor_buku', $nomorBuku)
         ->where('status', 'dipinjam')
         ->first();
 
-    if ($peminjaman) {
+    if (!$peminjaman) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Buku ini tidak sedang dipinjam oleh anggota.'
+        ], 400);
+    }
+
+    // Tambah jumlah buku
+    $book->jumlah += 1;
+    $book->status = 'tersedia';
+    $book->save();
+
+    // Update status peminjaman
+$peminjaman = Peminjaman::where('npm', $npm)
+        ->where('nomor_buku', $nomorBuku)
+        ->where('status', 'dipinjam')
+        ->first();
+   if ($peminjaman) {
         $peminjaman->status = 'dikembalikan';
         $peminjaman->tanggal_kembali = now();
         $peminjaman->save();
     }
 
-    return response()->json(['message' => 'Buku berhasil dikembalikan.']);
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Buku berhasil dikembalikan.'
+    ]);
 }
 
 
@@ -243,18 +260,21 @@ class RiwayatController extends Controller
     // Export PDF peminjaman
     public function exportPdf(Request $request)
     {
-        $peminjaman = Peminjaman::all();
-        $pdf = \PDF::loadView('admin.riwayat.peminjaman.pdf', compact('peminjaman'))
-            ->setPaper('a4', 'landscape');
-        return $pdf->download('data_peminjaman.pdf');
+        // Ambil semua peminjaman yang statusnya 'Dipinjam' saja
+        $peminjaman = Peminjaman::where('status', 'Dipinjam')->get();
+
+        $pdf = \PDF::loadView('admin.riwayat.peminjaman.pdf', compact('peminjaman'));
+        return $pdf->download('peminjaman_dipinjam.pdf');
     }
 
     // Export PDF pengembalian
     public function exportPdfPengembalian(Request $request)
     {
-        $peminjaman = Peminjaman::where('status', 'kembali')->get();
+        $peminjaman = Peminjaman::where('status', 'dikembalikan')->get();
         $pdf = \PDF::loadView('admin.riwayat.pengembalian.pdfkembali', compact('peminjaman'))
-            ->setPaper('a4', 'landscape');
+          ->setPaper('a4', 'landscape');
         return $pdf->download('data_pengembalian.pdf');
-    }
+    }  
+
+    
 }

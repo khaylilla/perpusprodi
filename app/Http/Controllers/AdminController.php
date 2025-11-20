@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Notifikasi;
 
 class AdminController extends Controller
 {
@@ -86,5 +87,40 @@ class AdminController extends Controller
         $user->delete();
         return redirect()->route('admin.datauser')->with('success', 'User berhasil dihapus!');
     }
+
+    public function notifikasi(Request $request)
+{
+    $notifikasi = Notifikasi::latest()->get();
+    $totalNotif = Notifikasi::count();
+    $notifBaru = Notifikasi::whereDate('created_at', today())->count();
+
+   return view('admin.notifikasi', compact('notifikasi', 'totalNotif', 'notifBaru'));
+}
+
+public function notifikasiStore(Request $request)
+{
+    $request->validate([
+        'judul' => 'required',
+        'pesan' => 'required',
+    ]);
+
+    Notifikasi::create($request->all());
+
+    return redirect()->back()->with('success', 'Notifikasi berhasil ditambahkan!');
+}
+
+public function notifikasiUpdate(Request $request, $id)
+{
+    $notifikasi = Notifikasi::findOrFail($id);
+    $notifikasi->update($request->all());
+
+    return redirect()->back()->with('success', 'Notifikasi berhasil diperbarui!');
+}
+
+public function notifikasiDelete($id)
+{
+    Notifikasi::findOrFail($id)->delete();
+    return redirect()->back()->with('success', 'Notifikasi berhasil dihapus!');
+}
 }
 

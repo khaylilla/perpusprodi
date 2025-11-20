@@ -7,6 +7,9 @@ use App\Models\User;
 use App\Models\Absen;
 use App\Models\Book;
 use App\Models\Artikel;
+use App\Models\Peminjaman;
+use App\Models\Denda;
+use App\Models\Notifikasi;
 use Illuminate\Support\Facades\Hash;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
@@ -149,6 +152,54 @@ public function submitAbsen(Request $request)
 
         return view('auth.artikel', compact('artikels'));
     }
+
+public function returnHistory()
+{
+    $userNpm = auth()->user()->npm; // ambil NPM user yang login
+
+    $pengembalian = Peminjaman::where('status', 'dikembalikan')
+                    ->where('npm', $userNpm)
+                    ->orderBy('tanggal_kembali', 'desc')
+                    ->get();
+
+    return view('auth.return-history', compact('pengembalian'));
+}
+
+public function borrowHistory()
+{
+    $userNpm = auth()->user()->npm; // ambil NPM user yang login
+
+    $peminjaman = Peminjaman::where('status', 'dipinjam')
+                    ->where('npm', $userNpm)
+                    ->orderBy('tanggal_pinjam', 'desc')
+                    ->get();
+
+    return view('auth.borrow-history', compact('peminjaman'));
+}
+public function fineHistory()
+{
+    $userNpm = auth()->user()->npm;
+
+    $denda = Denda::where('npm', $userNpm)
+                ->orderBy('tanggal_kembali', 'desc')
+                ->get();
+
+    return view('auth.fine-history', compact('denda'));
+}
+public function getNotifications()
+{
+    $userId = auth()->id();
+    $notifikasis = Notifikasi::where('user_id', $userId)
+                    ->latest()
+                    ->get();
+    return response()->json($notifikasis);
+}
+public function markAsRead($id)
+{
+    $notif = Notifikasi::findOrFail($id);
+    $notif->update(['read_at' => now()]);
+    return response()->json(['success' => true]);
+}
 
 }
 
