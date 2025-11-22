@@ -8,16 +8,19 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class AbsenController extends Controller
 {
-    // 🔹 Tampilkan daftar absen dengan pengelompokan (hari, bulan, tahun)
+    // ================================
+    // TAMPILAN DATA ABSEN
+    // ================================
     public function index(Request $request)
     {
-        $groupBy = $request->get('group_by', 'day'); // default: per hari
-        $keyword = $request->get('keyword');
+        $keyword    = $request->get('keyword');
+        $start_date = $request->get('start_date');
+        $end_date   = $request->get('end_date');
 
         // Query dasar
         $query = Absen::query();
 
-        // Jika ada pencarian
+        // Pencarian
         if ($keyword) {
             $query->where(function ($q) use ($keyword) {
                 $q->where('nama', 'like', "%$keyword%")
@@ -26,73 +29,121 @@ class AbsenController extends Controller
             });
         }
 
-        // Ambil data dan kelompokkan
+        // Filter tanggal
+        if ($start_date && $end_date) {
+            $query->whereBetween('tanggal', [$start_date, $end_date]);
+        }
+
+        // Ambil final data
         $absens = $query->orderBy('tanggal', 'desc')->get();
 
-        $groupedAbsens = match ($groupBy) {
-            'month' => $absens->groupBy(fn($item) => date('Y-m', strtotime($item->tanggal))),
-            'year' => $absens->groupBy(fn($item) => date('Y', strtotime($item->tanggal))),
-            default => $absens->groupBy(fn($item) => date('Y-m-d', strtotime($item->tanggal))),
-        };
-
-        return view('admin.dataabsen', compact('groupedAbsens', 'groupBy'));
+        return view('admin.dataabsen', compact('absens'));
     }
 
-    // 🔹 Simpan absen baru
+    // ================================
+    // TAMBAH DATA ABSEN
+    // ================================
     public function store(Request $request)
     {
         $request->validate([
             'nama' => 'required|string|max:255',
             'npm' => 'required|string|max:50',
-            'prodi' => 'required|string|max:100',
             'tanggal' => 'required|date',
         ]);
 
-        Absen::create($request->only('nama', 'npm', 'prodi', 'tanggal'));
-        return redirect()->route('admin.dataabsen')->with('success', 'Data absen berhasil ditambahkan.');
+        Absen::create($request->only('nama', 'npm', 'tanggal'));
+
+        return redirect()->route('admin.dataabsen')
+                         ->with('success', 'Data absen berhasil ditambahkan.');
     }
 
-    // 🔹 Update absen
+    // ================================
+    // UPDATE DATA ABSEN
+    // ================================
     public function update(Request $request, $id)
     {
         $request->validate([
             'nama' => 'required|string|max:255',
             'npm' => 'required|string|max:50',
-            'prodi' => 'required|string|max:100',
             'tanggal' => 'required|date',
         ]);
 
         $absen = Absen::findOrFail($id);
-        $absen->update($request->only('nama', 'npm', 'prodi', 'tanggal'));
+        $absen->update($request->only('nama', 'npm', 'tanggal'));
 
-        return redirect()->route('admin.dataabsen')->with('success', 'Data absen berhasil diperbarui.');
+        return redirect()->route('admin.dataabsen')
+                         ->with('success', 'Data absen berhasil diperbarui.');
     }
 
-    // 🔹 Hapus absen
+    // ================================
+    // HAPUS DATA ABSEN
+    // ================================
     public function delete($id)
     {
         $absen = Absen::findOrFail($id);
         $absen->delete();
 
-        return redirect()->route('admin.dataabsen')->with('success', 'Data absen berhasil dihapus.');
+        return redirect()->route('admin.dataabsen')
+                         ->with('success', 'Data absen berhasil dihapus.');
     }
 
-    // 🔹 Cetak PDF berdasarkan pengelompokan
+    // ================================
+    // CETAK PDF
+    // ================================
     public function printPdf(Request $request)
     {
-        $groupBy = $request->get('group_by', 'day');
+        $start_date = $request->get('start_date');
+        $end_date   = $request->get('end_date');
 
-        $absens = Absen::orderBy('tanggal', 'desc')->get();
+        // Query dasar
+        $query = Absen::orderBy('tanggal', 'desc');
 
-        $groupedAbsens = match ($groupBy) {
-            'month' => $absens->groupBy(fn($item) => date('Y-m', strtotime($item->tanggal))),
-            'year' => $absens->groupBy(fn($item) => date('Y', strtotime($item->tanggal))),
-            default => $absens->groupBy(fn($item) => date('Y-m-d', strtotime($item->tanggal))),
-        };
+        // Filter jika ada range tanggal
+        if ($start_date && $end_date) {
+            $query->whereBetween('tanggal', [$start_date, $end_date]);
+        }
 
-        $pdf = Pdf::loadView('admin.absen_pdf', compact('groupedAbsens', 'groupBy'))
+        $absens = $query->get();
+
+        $pdf = Pdf::loadView('admin.absen_pdf', compact('absens'))
                   ->setPaper('a4', 'portrait');
 
-        return $pdf->download("data_absen_{$groupBy}.pdf");
+        return $pdf->download("data_absen.pdf");
     }
+    public function scanPage()
+{
+    return view('admin.scan_absen');
+}
+
+public function getUser($npm)
+{
+    $user = \App\Models\User::where('npm', $npm)->first();
+
+    if (!$user) {
+        return response()->json(['nama' => null]);
+    }
+
+    return response()->json([
+        'nama' => $user->nama,
+    ]);
+}
+
+public function storeScan(Request $request)
+{
+    $request->validate([
+        'npm' => 'required|string',
+        'nama' => 'required|string',
+        'tanggal' => 'required|date'
+    ]);
+
+    Absen::create([
+        'npm' => $request->npm,
+        'nama' => $request->nama,
+        'tanggal' => $request->tanggal,
+        'user_id' => null,
+    ]);
+
+    return response()->json(['message' => 'Absen berhasil dicatat!']);
+}
+
 }

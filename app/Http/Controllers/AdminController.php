@@ -88,13 +88,35 @@ class AdminController extends Controller
         return redirect()->route('admin.datauser')->with('success', 'User berhasil dihapus!');
     }
 
-    public function notifikasi(Request $request)
+public function notifikasi(Request $request)
 {
-    $notifikasi = Notifikasi::latest()->get();
+    $query = Notifikasi::query();
+
+    // ===== FILTER SEARCH =====
+    if ($request->filled('keyword')) {
+        $keyword = $request->keyword;
+        $query->where(function($q) use ($keyword) {
+            $q->where('judul', 'like', "%{$keyword}%")
+              ->orWhere('pesan', 'like', "%{$keyword}%");
+        });
+    }
+
+    // ===== FILTER TANGGAL =====
+    if ($request->filled('start_date')) {
+        $start = $request->start_date;
+        $query->whereDate('created_at', '>=', $start);
+    }
+    if ($request->filled('end_date')) {
+        $end = $request->end_date;
+        $query->whereDate('created_at', '<=', $end);
+    }
+
+    $notifikasi = $query->latest()->get();
+
     $totalNotif = Notifikasi::count();
     $notifBaru = Notifikasi::whereDate('created_at', today())->count();
 
-   return view('admin.notifikasi', compact('notifikasi', 'totalNotif', 'notifBaru'));
+    return view('admin.notifikasi', compact('notifikasi', 'totalNotif', 'notifBaru'));
 }
 
 public function notifikasiStore(Request $request)

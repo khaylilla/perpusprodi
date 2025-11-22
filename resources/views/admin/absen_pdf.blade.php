@@ -31,7 +31,6 @@
           <th>No</th>
           <th>Nama</th>
           <th>NPM</th>
-          <th>Program Studi</th>
           <th>Tanggal</th>
         </tr>
       </thead>
@@ -41,7 +40,6 @@
             <td>{{ $index + 1 }}</td>
             <td>{{ $absen->nama }}</td>
             <td>{{ $absen->npm }}</td>
-            <td>{{ $absen->prodi ?? '-' }}</td>
             <td>{{ $absen->tanggal }}</td>
           </tr>
         @endforeach

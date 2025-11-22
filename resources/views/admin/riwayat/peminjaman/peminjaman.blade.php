@@ -49,19 +49,31 @@
   }
   table th { background-color: #f2f2f2; }
   table tbody tr:hover { background-color: #f6f6ff; }
-
-  .filter-sort-bar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 18px;
-    flex-wrap: wrap;
-  }
-  .filter-sort-bar select {
-    width: auto;
-  }
-
   .badge { font-size: 0.85em; }
+
+   .search-bar {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  margin-bottom: 20px;
+  width: 100%;
+  max-width: 80%;  /* agar penuh selebar container */
+}
+
+ .search-bar input {
+  border: none;
+  outline: none;
+  flex: 1;
+  font-size: 15px;
+  padding-left: 8px;
+}
+
+.search-bar .btn {
+  white-space: nowrap;
+}
 </style>
 
 <div class="container-fluid">
@@ -85,17 +97,18 @@
     </a>
   </div>
 
+ {{-- SEARCH BAR --}}
+    <form action="{{ route('admin.riwayat.peminjaman.peminjaman') }}" method="GET" class="search-bar w-100 mb-3">
+        <i class="bi bi-search"></i>
+        <input type="text" name="keyword" id="searchInput" placeholder="Cari Peminjaman..." value="{{ request('keyword') }}">
+        <button type="submit" class="btn btn-primary btn-sm ms-2">Cari</button>
+    </form>
+    
   {{-- SORT & GROUP BAR --}}
   <div class="filter-sort-bar">
-  <input type="date" id="filter-date" class="form-control">
-  
-  <select id="filter-status" class="form-select">
-    <option value="">Semua Status</option>
-    <option value="dipinjam">Dipinjam</option>
-    <option value="dikembalikan">Dikembalikan</option>
-  </select>
+  <input type="date" id="filter-date" class="form-control"> <br>
 
-  <a href="#" id="downloadPdf" class="btn btn-success">Download PDF</a>
+  <a href="{{ route('admin.riwayat.peminjaman.pdf') }}" id="downloadPdf" class="btn btn-success">Download PDF</a>
 </div>
 
 
@@ -116,7 +129,7 @@
         </tr>
       </thead>
       <tbody>
-        @forelse($peminjaman as $index => $p)
+        @forelse($peminjaman->where('status', 'dipinjam') as $index => $p)
         <tr data-status="{{ strtolower($p->status) }}" data-date="{{ \Carbon\Carbon::parse($p->tanggal_pinjam)->format('Y-m-d') }}">
           <td>{{ $index + 1 }}</td>
           <td>{{ $p->nama }}</td>
@@ -237,39 +250,62 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   // Filter berdasarkan tanggal dan status + Cetak PDF
-const dateInput = document.getElementById('filter-date');
-const statusSelect = document.getElementById('filter-status');
-const downloadPdf = document.getElementById('downloadPdf');
+  const dateInput = document.getElementById('filter-date');
+  const downloadPdf = document.getElementById('downloadPdf');
 
-function applyFilters() {
-  const rows = document.querySelectorAll('tbody tr');
-  const selectedDate = dateInput.value ? new Date(dateInput.value) : null;
-  const selectedStatus = statusSelect.value.toLowerCase();
+  function applyFilters() {
+    const rows = document.querySelectorAll('tbody tr');
+    const selectedDate = dateInput.value ? new Date(dateInput.value) : null;
+    const selectedStatus = statusSelect.value.toLowerCase();
+    let visibleCount = 0;
 
-  rows.forEach(row => {
-    const rowDate = new Date(row.dataset.date);
-    const rowStatus = row.dataset.status;
-    let visible = true;
+    rows.forEach(row => {
+      // Abaikan row "tidak ada data" jika sudah ada
+      if (row.classList.contains('no-data-row')) return;
 
-    if (selectedDate && rowDate.toDateString() !== selectedDate.toDateString()) visible = false;
-    if (selectedStatus && rowStatus !== selectedStatus) visible = false;
+      const rowDate = new Date(row.dataset.date);
+      const rowStatus = row.dataset.status;
+      let visible = true;
 
-    row.style.display = visible ? '' : 'none';
-  });
-}
+      // Filter tanggal
+      if (selectedDate && rowDate.toDateString() !== selectedDate.toDateString()) visible = false;
+      // Filter status
+      if (selectedStatus && rowStatus !== selectedStatus) visible = false;
 
-// Jalankan filter saat tanggal/status diubah
-dateInput.addEventListener('change', applyFilters);
-statusSelect.addEventListener('change', applyFilters);
+      row.style.display = visible ? '' : 'none';
 
-// Tombol download PDF
-downloadPdf.addEventListener('click', function () {
+      if (visible) visibleCount++;
+    });
+
+    // Tambahkan row "Tidak ada data yang ditemukan" jika tidak ada baris yang terlihat
+    let tbody = document.querySelector('tbody');
+    let noDataRow = tbody.querySelector('.no-data-row');
+
+    if (visibleCount === 0) {
+      if (!noDataRow) {
+        noDataRow = document.createElement('tr');
+        noDataRow.classList.add('no-data-row');
+        noDataRow.innerHTML = `<td colspan="9" class="text-center text-muted">Tidak ada data yang ditemukan</td>`;
+        tbody.appendChild(noDataRow);
+      }
+    } else {
+      if (noDataRow) noDataRow.remove();
+    }
+  }
+
+  // Jalankan filter saat tanggal/status diubah
+  dateInput.addEventListener('change', applyFilters);
+  statusSelect.addEventListener('change', applyFilters);
+
+  // Tombol download PDF
+  downloadPdf.addEventListener('click', function () {
   const date = dateInput.value;
-  const status = statusSelect.value;
-  let url = `{{ route('admin.riwayat.peminjaman.pdf') }}?filter_date=${date}&filter_status=${status}`;
+  let url = `{{ route('admin.riwayat.peminjaman.pdf') }}?filter_date=${date}`;
   window.open(url, '_blank');
 });
 
+  // Jalankan filter awal saat halaman dimuat
+  applyFilters();
 });
 </script>
 @endsection

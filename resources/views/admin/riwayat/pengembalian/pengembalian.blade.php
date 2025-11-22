@@ -52,17 +52,29 @@
 
   .badge { font-size: 0.85em; }
 
-  /* SORT & FILTER BAR */
-  .sort-filter-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 20px;
-    align-items: center;
-  }
-  .sort-filter-bar select {
-    width: auto;
-  }
+   .search-bar {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  margin-bottom: 20px;
+  width: 100%;
+  max-width: 80%;  /* agar penuh selebar container */
+}
+
+ .search-bar input {
+  border: none;
+  outline: none;
+  flex: 1;
+  font-size: 15px;
+  padding-left: 8px;
+}
+
+.search-bar .btn {
+  white-space: nowrap;
+}
 </style>
 
 <div class="container-fluid">
@@ -86,21 +98,20 @@
     </a>
   </div>
 
+  {{-- SEARCH BAR --}}
+    <form action="{{ route('admin.riwayat.pengembalian.pengembalian') }}" method="GET" class="search-bar w-100 mb-3">
+        <i class="bi bi-search"></i>
+        <input type="text" name="keyword" id="searchInput" placeholder="Cari Pengembalian..." value="{{ request('keyword') }}">
+        <button type="submit" class="btn btn-primary btn-sm ms-2">Cari</button>
+    </form>
+
 {{-- SORT & FILTER BAR --}}
   <div class="sort-filter-bar">
     <label for="filter-date" class="fw-semibold">Pilih Tanggal:</label>
-    <input type="date" id="filter-date" class="form-control">
+    <input type="date" id="filter-date" class="form-control"><br>
 
-    <label for="status-filter" class="fw-semibold ms-3">Status:</label>
-    <select id="status-filter" class="form-select">
-      <option value="">Semua</option>
-      <option value="Dipinjam">Dipinjam</option>
-      <option value="dikembalikan">Dikembalikan</option>
-    </select>
-
-    <a href="admin.riwayat.pengembalian.pdfkembali" id="downloadPdf" class="btn btn-success ms-auto">
-      <i class="bi bi-file-earmark-pdf"></i> Cetak PDF
-    </a>
+    <a href="{{ route('admin.riwayat.pengembalian.pdfkembali') }}" id="downloadPdf" class="btn btn-success">Download PDF</a>
+</div>
   </div>
 
   {{-- TABEL PENGEMBALIAN --}}
@@ -120,7 +131,7 @@
         </tr>
       </thead>
       <tbody>
-        @forelse($peminjaman as $index => $p)
+        @forelse($peminjaman->where('status', 'dikembalikan') as $index => $p)
         <tr data-status="{{ strtolower($p->status) }}">
           <td>{{ $index + 1 }}</td>
           <td>{{ $p->nama }}</td>

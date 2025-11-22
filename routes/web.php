@@ -14,6 +14,9 @@ use App\Http\Controllers\BookController;
 use App\Http\Controllers\ArtikelController;
 use App\Http\Controllers\RiwayatController;
 use App\Http\Controllers\PeminjamanController;
+use App\Http\Controllers\DendaController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\AdminKartuController;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
@@ -100,11 +103,43 @@ Route::get('/card/{id}', [AuthController::class, 'showCard'])->name('card');
 Route::get('/card/png/{id}', [AuthController::class, 'saveAsPNG'])->name('card.png');
 
 // ============================
-// ABSEN
+// DATA ABSEN CRUD
 // ============================
-Route::get('/absen', [AuthController::class, 'showAbsenForm'])->name('absen');
-Route::post('/absen', [AuthController::class, 'submitAbsen'])->name('absen.submit');
+Route::prefix('admin')->group(function() {
 
+    // Halaman daftar absen
+    Route::get('/data-absen', [AbsenController::class, 'index'])
+        ->name('admin.dataabsen');
+
+    // Tambah absen manual
+    Route::post('/data-absen/store', [AbsenController::class, 'store'])
+        ->name('admin.dataabsen.store');
+
+    // Update absen
+    Route::put('/data-absen/update/{id}', [AbsenController::class, 'update'])
+        ->name('admin.dataabsen.update');
+
+    // Hapus absen
+    Route::delete('/data-absen/delete/{id}', [AbsenController::class, 'delete'])
+        ->name('admin.dataabsen.delete');
+
+    // Cetak PDF
+    Route::get('/data-absen/print', [AbsenController::class, 'printPdf'])
+        ->name('admin.dataabsen.print');
+
+    // ============================
+    // SCAN ABSEN
+    // ============================
+    Route::get('/absen/scan', [AbsenController::class, 'scanPage'])
+        ->name('admin.absen.scan');
+
+    Route::post('/absen/scan/store', [AbsenController::class, 'storeScan'])
+        ->name('admin.absen.scan.store');
+
+    Route::get('/absen/get-user/{npm}', [AbsenController::class, 'getUser'])
+        ->name('admin.absen.get-user');
+
+});
 // ============================
 // FORGOT & RESET PASSWORD
 // ============================
@@ -129,15 +164,22 @@ Route::get('/artikel', [AuthController::class, 'artikel'])->name('auth.artikel')
 
 Route::get('/kontak', function () {return view('auth.kontak');})->name('auth.kontak');
 
+Route::get('/return-history', [AuthController::class, 'returnHistory'])->name('auth.return-history')->middleware('auth');
+Route::get('/borrow-history', [AuthController::class, 'borrowHistory'])->name('auth.borrow-history')->middleware('auth');
+Route::get('/fine-history', [AuthController::class, 'fineHistory'])->name('auth.fine-history')->middleware('auth');
+Route::get('/notifications', [AuthController::class, 'index'])->name('notifications');
+Route::post('/notifikasi/{id}/read', [AuthController::class, 'markAsRead']);
+
+Route::get('/home', [AuthController::class, 'index'])->name('home');
+
 // ============================
 // ADMIN ROUTES (middleware check.admin)
 // ============================
 Route::prefix('admin')->middleware('check.admin')->group(function () {
     
     // Dashboard
-    Route::get('/', function() {
-        return view('admin.dashboard');
-    })->name('admin.dashboard');
+   Route::get('/admin/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
+    ->name('admin.dashboard');
 
     // DATA USER
     Route::get('/datauser', [AdminController::class, 'dataUser'])->name('admin.datauser');
@@ -169,6 +211,12 @@ Route::prefix('admin')->middleware('check.admin')->group(function () {
     Route::delete('/dataartikel/{id}', [ArtikelController::class, 'destroy'])->name('admin.dataartikel.destroy');
     Route::get('/dataartikel/pdf', [ArtikelController::class, 'pdf'])->name('admin.dataartikel.pdf');
 
+        // DATA NOTIFIKASI
+    Route::get('/admin/notifikasi', [AdminController::class, 'notifikasi'])->name('admin.notifikasi');
+    Route::post('/admin/notifikasi/store', [AdminController::class, 'notifikasiStore'])->name('admin.notifikasi.store');
+    Route::put('/admin/notifikasi/update/{id}', [AdminController::class, 'notifikasiUpdate'])->name('admin.notifikasi.update');
+    Route::delete('/admin/notifikasi/delete/{id}', [AdminController::class, 'notifikasiDelete'])->name('admin.notifikasi.delete');
+
   // ======== Manajemen Riwayat ========
     Route::prefix('riwayat')->group(function () {
 
@@ -192,21 +240,32 @@ Route::prefix('admin')->middleware('check.admin')->group(function () {
 
     // ========== PENGEMBALIAN & DENDA ==========
 
-// Pengembalian
-Route::prefix('riwayat/pengembalian')->name('admin.riwayat.pengembalian.')->group(function () {
-    Route::get('/', [RiwayatController::class, 'pengembalian'])->name('pengembalian');
-    Route::get('/scankembali', [RiwayatController::class, 'scanKembali'])->name('scankembali');
-    Route::put('/update/{id}', [RiwayatController::class, 'updatePengembalian'])->name('update');
-    Route::delete('/destroy/{id}', [RiwayatController::class, 'destroyPengembalian'])->name('destroy'); // <--- ini
-    // Tambahkan ini untuk AJAX proses pengembalian
-    Route::post('/proses', [RiwayatController::class, 'prosesPengembalian'])->name('proses');
+    // Pengembalian
+    Route::prefix('riwayat/pengembalian')->name('admin.riwayat.pengembalian.')->group(function () {
+        Route::get('/', [RiwayatController::class, 'pengembalian'])->name('pengembalian');
+        Route::get('/scankembali', [RiwayatController::class, 'scanKembali'])->name('scankembali');
+        Route::put('/update/{id}', [RiwayatController::class, 'updatePengembalian'])->name('update');
+        Route::delete('/destroy/{id}', [RiwayatController::class, 'destroyPengembalian'])->name('destroy'); // <--- ini
+        // Tambahkan ini untuk AJAX proses pengembalian
+        Route::post('/proses', [RiwayatController::class, 'prosesPengembalian'])->name('proses');
 
-    // PDF
-    Route::get('/pdf', [RiwayatController::class, 'exportPdfPengembalian'])->name('pdfkembali');
+        // PDF
+        Route::get('/pdf', [RiwayatController::class, 'exportPdfPengembalian'])->name('pdfkembali');
+    });
+
+    // ========== DENDA ==========
+    Route::prefix('denda')->name('admin.riwayat.denda.')->group(function () {
+        Route::get('/', [DendaController::class, 'index'])->name('index');
+        Route::post('/store', [DendaController::class, 'store'])->name('store');
+        Route::put('/{id}/update', [DendaController::class, 'update'])->name('update');
+        Route::delete('/{id}/delete', [DendaController::class, 'destroy'])->name('destroy');
+        Route::get('/pdf', [DendaController::class, 'exportPdf'])->name('pdf');
+    });
 });
+// Halaman untuk lihat anggota dan generate ulang kartu
+Route::get('/admin/kartu/generate', [AdminKartuController::class, 'index'])->name('admin.kartu.generate');
 
-    Route::get('/denda', [RiwayatController::class, 'denda'])->name('admin.riwayat.denda');
+// Proses generate ulang kartu
+Route::post('/admin/kartu/generate/{user}', [AdminKartuController::class, 'regenerate'])->name('admin.kartu.regenerate');
+
 });
-});
-
-

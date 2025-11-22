@@ -1,5 +1,6 @@
 @php
     use SimpleSoftwareIO\QrCode\Facades\QrCode;
+    use Carbon\Carbon;
 @endphp
 
 <!DOCTYPE html>
@@ -184,9 +185,17 @@
 
         <img src="{{ asset('storage/foto/'.$user->foto) }}" alt="Foto" class="profile-photo">
 
-        <div class="info">
+       <div class="info">
             <p><strong>Nama :</strong> {{ $user->nama }}</p>
             <p><strong>NPM :</strong> {{ $user->npm }}</p>
+            <p style="font-size: 11px; font-style: italic; opacity:0.7; margin-top:4px;">
+                Masa Aktif: 
+                s/d 
+                {{ Carbon::parse($user->created_at)->addYears(2)->translatedFormat('d F Y') }}
+                @if(now()->gt(Carbon::parse($user->created_at)->addYears(2)))
+                    - Kartu sudah tidak aktif
+                @endif
+            </p>
         </div>
 
         <div class="qrcode">

@@ -120,70 +120,69 @@
 
 <div class="container">
 
+    <!-- FORM FILTER -->
+    <form method="GET" class="d-flex gap-2 mb-4">
+        <select name="mode" class="form-select form-select-sm" style="width:150px">
+            <option value="hari" {{ request('mode')=='hari' ? 'selected' : '' }}>Per Hari</option>
+            <option value="bulan" {{ request('mode')=='bulan' ? 'selected' : '' }}>Per Bulan</option>
+            <option value="tahun" {{ request('mode')=='tahun' ? 'selected' : '' }}>Per Tahun</option>
+            <option value="range_tahun" {{ request('mode')=='range_tahun' ? 'selected' : '' }}>Rentang Tahun</option>
+        </select>
+
+        <input type="date" name="start" class="form-control form-control-sm" value="{{ request('start') }}" style="width:160px">
+        <input type="date" name="end" class="form-control form-control-sm" value="{{ request('end') }}" style="width:160px">
+        <button class="btn btn-primary btn-sm">Filter</button>
+    </form>
+
     <!-- ROW 1 – STATISTIK -->
     <div class="row mb-4">
         <div class="col-md-4 mb-3">
             <div class="dashboard-card text-center bg-gradient-blue">
                 <h6>Total Pengunjung</h6>
                 <h2>{{ $totalPengunjung }}</h2>
-                <small>Hari ini: <b>{{ $pengunjungHarian }}</b></small>
             </div>
         </div>
-
         <div class="col-md-4 mb-3">
             <div class="dashboard-card text-center bg-gradient-purple">
                 <h6>Total User</h6>
                 <h2>{{ $totalUser }}</h2>
             </div>
         </div>
-
         <div class="col-md-4 mb-3">
             <div class="dashboard-card text-center bg-gradient-orange">
                 <h6>Total Buku</h6>
                 <h2>{{ $totalBuku }}</h2>
             </div>
         </div>
-
         <div class="col-md-4 mb-3">
             <div class="dashboard-card text-center bg-gradient-blue">
                 <h6>Buku Sedang Dipinjam</h6>
                 <h2>{{ $totalPeminjaman }}</h2>
-                <small>Bulan ini: <b>{{ $peminjamanBulanan }}</b></small>
             </div>
         </div>
-
         <div class="col-md-4 mb-3">
             <div class="dashboard-card text-center bg-gradient-orange">
                 <h6>Buku Dikembalikan</h6>
                 <h2>{{ $totalPengembalian }}</h2>
             </div>
         </div>
-
-        <div class="col-md-4 mb-3">
-            <div class="dashboard-card text-center bg-gradient-red">
-                <h6>Total Denda</h6>
-                <h2>{{ $totalDenda }}</h2>
-            </div>
-        </div>
     </div>
 
-    <!-- ROW 2 – LINE CHART -->
+    <!-- ROW 2 – LINE & BAR CHART -->
     <div class="row mb-4">
         <div class="col-md-6">
             <div class="chart-container">
-                <h6 class="text-center mb-2">📈 Grafik Peminjaman per Bulan</h6>
+                <h6 class="text-center mb-2">📈 Grafik Peminjaman & Pengembalian</h6>
                 <canvas id="chartPeminjaman"></canvas>
             </div>
         </div>
-
         <div class="col-md-6">
             <div class="chart-container">
-                <h6 class="text-center mb-2">📊 Grafik Pengunjung per Bulan</h6>
-                <canvas id="chartPengunjung"></canvas>
+                <h6 class="text-center mb-2">👤 Grafik User Aktif</h6>
+                <canvas id="chartUserAktif"></canvas>
             </div>
         </div>
     </div>
-    
 
     <!-- ROW 3 – PIE CHART -->
     <div class="row mb-4">
@@ -196,8 +195,8 @@
     </div>
 
     <!-- ROW 4 – TOP 5 TABLES -->
+    <!-- ROW 4 – TOP 5 TABLES -->
     <div class="row mt-4">
-
         <div class="col-md-6">
             <div class="table-container">
                 <h6 class="text-center mb-3">📚 5 Buku Paling Sering Dipinjam</h6>
@@ -221,7 +220,6 @@
                 </table>
             </div>
         </div>
-
         <div class="col-md-6">
             <div class="table-container">
                 <h6 class="text-center mb-3">👤 5 User Paling Aktif</h6>
@@ -245,140 +243,98 @@
                 </table>
             </div>
         </div>
-
     </div>
 
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const bulan = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+const labels = @json($labels);
+const peminjamanData = @json(array_values($grafikPeminjaman));
+const pengembalianData = @json(array_values($grafikPengembalian));
+const userAktifData = @json(array_values($grafikUserAktif));
+const kategoriLabels = {!! json_encode($kategoriBuku->keys()) !!};
+const kategoriValues = {!! json_encode($kategoriBuku->values()) !!};
 
-    /* =============================
-       1) LINE CHART — PEMINJAMAN & PENGEMBALIAN
-    ============================== */
-    const ctxLine = document.getElementById('chartPeminjaman').getContext('2d');
+const bulanDefault = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
 
-    const peminjaman = @json(array_values($grafikPeminjaman));
-    const pengembalian = @json(array_values($grafikPengembalian));
-
-    new Chart(ctxLine, {
-        type: "line",
-        data: {
-            labels: bulan,
-            datasets: [
-                {
-                    label: "Peminjaman",
-                    data: peminjaman,
-                    borderColor: "#2d4bf0",
-                    backgroundColor: "rgba(45,75,240,0.15)",
-                    tension: 0.35,
-                    borderWidth: 3,
-                    pointRadius: 4,
-                    pointBackgroundColor: "#2d4bf0"
-                },
-                {
-                    label: "Pengembalian",
-                    data: pengembalian,
-                    borderColor: "#f15a29",
-                    backgroundColor: "rgba(241,90,41,0.15)",
-                    tension: 0.35,
-                    borderWidth: 3,
-                    pointRadius: 4,
-                    pointBackgroundColor: "#f15a29"
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: "bottom",
-                    labels: { usePointStyle: true }
-                },
-                tooltip: {
-                    backgroundColor: "white",
-                    titleColor: "#333",
-                    bodyColor: "#333",
-                    borderColor: "#e5e7eb",
-                    borderWidth: 1,
-                    displayColors: false,
-                    padding: 12
-                }
+// ===== 1) LINE CHART PEMINJAMAN & PENGEMBALIAN =====
+new Chart(document.getElementById('chartPeminjaman'), {
+    type: 'line',
+    data: {
+        labels: labels.length ? labels : bulanDefault,
+        datasets: [
+            {
+                label: "Peminjaman",
+                data: peminjamanData,
+                borderColor: "#2d4bf0",
+                backgroundColor: "rgba(45,75,240,0.15)",
+                tension: 0.35,
+                borderWidth: 3,
+                pointRadius: 4,
+                pointBackgroundColor: "#2d4bf0"
             },
-            scales: {
-                x: {
-                    grid: { display: false },
-                    ticks: { color: "#666" }
-                },
-                y: {
-                    beginAtZero: true,
-                    ticks: { color: "#666" }
-                }
+            {
+                label: "Pengembalian",
+                data: pengembalianData,
+                borderColor: "#f15a29",
+                backgroundColor: "rgba(241,90,41,0.15)",
+                tension: 0.35,
+                borderWidth: 3,
+                pointRadius: 4,
+                pointBackgroundColor: "#f15a29"
             }
-        }
-    });
-
-    /* =============================
-       2) BAR CHART — USER AKTIF PER BULAN
-       (PERBAIKAN: ANGKA TANPA DESIMAL)
-    ============================== */
-    const ctxUser = document.getElementById('chartPengunjung').getContext('2d');
-    const userAktif = @json(array_values($grafikUserAktif)); // pastikan dari controller ada datanya
-
-    new Chart(ctxUser, {
-        type: "bar",
-        data: {
-            labels: bulan,
-            datasets: [
-                {
-                    label: "User Aktif",
-                    data: userAktif,
-                    backgroundColor: "rgba(34,197,94,0.85)",
-                    borderRadius: 12,
-                    maxBarThickness: 40
-                }
-            ]
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: "bottom", labels: { usePointStyle: true } },
+            tooltip: { mode: 'index', intersect: false }
         },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { position: "bottom" }
-            },
-            scales: {
-                x: {
-                    grid: { display: false },
-                    ticks: { color: "#444" }
-                },
-                y: {
-                    beginAtZero: true,
-                    ticks: { 
-                        color: "#444",
-                        precision: 0,
-                        callback: value => Number.isInteger(value) ? value : null
-                    }
-                }
-            }
+        scales: {
+            x: { grid: { display: false }, ticks: { color: "#666" } },
+            y: { beginAtZero: true, ticks: { color: "#666" } }
         }
-    });
+    }
+});
 
-    /* =============================
-       3) PIE CHART — KATEGORI BUKU
-    ============================== */
-    new Chart(document.getElementById('chartKategori').getContext('2d'), {
-        type: 'doughnut',
-        data: {
-            labels: {!! json_encode($kategoriBuku->keys()) !!},
-            datasets: [{
-                data: {!! json_encode($kategoriBuku->values()) !!},
-                backgroundColor: ["#4e73df", "#1cc88a", "#36b9cc", "#f6c23e", "#e74a3b"],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: { legend: { position: 'bottom' } }
+// ===== 2) BAR CHART USER AKTIF =====
+new Chart(document.getElementById('chartUserAktif'), {
+    type: 'bar',
+    data: {
+        labels: labels.length ? labels : bulanDefault,
+        datasets: [{
+            label: "User Aktif",
+            data: userAktifData,
+            backgroundColor: "rgba(34,197,94,0.85)",
+            borderRadius: 12,
+            maxBarThickness: 40
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { position: "bottom" } },
+        scales: {
+            x: { grid: { display: false }, ticks: { color: "#444" } },
+            y: { beginAtZero: true, ticks: { precision: 0 } }
         }
-    });
+    }
+});
+
+// ===== 3) PIE CHART KATEGORI BUKU =====
+new Chart(document.getElementById('chartKategori'), {
+    type: 'doughnut',
+    data: {
+        labels: kategoriLabels,
+        datasets: [{
+            data: kategoriValues,
+            backgroundColor: ["#4e73df", "#1cc88a", "#36b9cc", "#f6c23e", "#e74a3b"],
+            borderWidth: 0
+        }]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+});
 </script>
+
 @endsection

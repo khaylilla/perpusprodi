@@ -5,7 +5,7 @@
   /* 🎨 Layout Umum */
   .content-container {
     padding: 50px 30px;
-    background: linear-gradient(135deg, #004aad, #001f4d);
+    background: linear-gradient(135deg, #213044ff, #14234dff);
     min-height: 100vh;
     color: #fff;
     position: relative;
@@ -21,10 +21,7 @@
     z-index: 0;
   }
 
-  .content-container > * {
-    position: relative;
-    z-index: 1;
-  }
+  .content-container > * { position: relative; z-index: 1; }
 
   h3 {
     text-align: center;
@@ -63,9 +60,7 @@
     box-shadow: 0 0 8px rgba(255, 204, 102, 0.6);
   }
 
-  .filter-bar option {
-    color: #000;
-  }
+  .filter-bar option { color: #000; }
 
   /* 📚 Container Buku */
   .books-container {
@@ -80,7 +75,6 @@
     animation: fadeIn 0.8s ease;
   }
 
-  /* 📘 Card Buku */
   .book-card {
     background: rgba(255, 255, 255, 0.15);
     border: 1px solid rgba(255, 255, 255, 0.25);
@@ -109,38 +103,14 @@
     transition: transform 0.4s ease;
   }
 
-  .book-card:hover img {
-    transform: scale(1.05);
-  }
+  .book-card:hover img { transform: scale(1.05); }
 
-  .book-title {
-    margin-top: 10px;
-    font-size: 15px;
-    font-weight: 600;
-    color: #ffcc66;
-  }
+  .book-title { margin-top: 10px; font-size: 15px; font-weight: 600; color: #ffcc66; }
+  .book-jenis { font-size: 13px; color: #d0d0d0; }
+  .book-desc { font-size: 12px; color: #eee; margin-top: 6px; }
 
-  .book-jenis {
-    font-size: 13px;
-    color: #d0d0d0;
-  }
-
-  .book-desc {
-    font-size: 12px;
-    color: #eee;
-    margin-top: 6px;
-  }
-
-  .pagination {
-    display: flex;
-    justify-content: center;
-    margin-top: 30px;
-  }
-
-  .pagination .page-item {
-    margin: 0 4px;
-  }
-
+  .pagination { display: flex; justify-content: center; margin-top: 30px; }
+  .pagination .page-item { margin: 0 4px; }
   .pagination .page-link {
     border-radius: 10px;
     padding: 8px 14px;
@@ -150,54 +120,15 @@
     font-weight: 600;
     transition: all 0.3s;
   }
+  .pagination .page-link:hover { background: #ffcc66; color: #001f4d; }
+  .pagination .active .page-link { background: #ffcc66; color: #001f4d; }
 
-  .pagination .page-link:hover {
-    background: #ffcc66;
-    color: #001f4d;
-  }
-
-  .pagination .active .page-link {
-    background: #ffcc66;
-    color: #001f4d;
-  }
-
-  footer {
-    background: linear-gradient(180deg, #001f4d, #000);
-    color: white;
-    padding: 40px;
-    margin-top: 60px;
-    text-align: center;
-    border-top: 4px solid #ffb84d;
-    font-size: 15px;
-  }
-
-  footer iframe {
-    border: 0;
-    width: 100%;
-    height: 180px;
-    border-radius: 12px;
-    margin-top: 15px;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(15px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes fadeUp {
-    0% { opacity: 0; transform: translateY(25px); }
-    100% { opacity: 1; transform: translateY(0); }
-  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeUp { 0% { opacity: 0; transform: translateY(25px); } 100% { opacity: 1; transform: translateY(0); } }
 
   @media (max-width: 768px) {
-    .books-container {
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    }
-
-    .filter-bar {
-      flex-direction: column;
-      gap: 10px;
-    }
+    .books-container { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+    .filter-bar { flex-direction: column; gap: 10px; }
   }
 </style>
 
@@ -206,32 +137,22 @@
 
   <!-- 🔍 Filter Bar -->
   <div class="filter-bar">
-    <!-- Input pencarian -->
-    <input 
-      type="text" 
-      id="search" 
-      placeholder="🔍 Cari buku..." 
-      value="{{ request('search') }}"
-      onkeypress="if(event.key === 'Enter') applyFilters()"
-    >
-
-    <!-- Dropdown Urutkan -->
-    <select id="urutkan" onchange="applyFilters()">
-      <option value="">Urutkan</option>
-      <option value="judul_asc" {{ request('urutkan') == 'judul_asc' ? 'selected' : '' }}>Judul A-Z</option>
-      <option value="judul_desc" {{ request('urutkan') == 'judul_desc' ? 'selected' : '' }}>Judul Z-A</option>
-      <option value="tahun_asc" {{ request('urutkan') == 'tahun_asc' ? 'selected' : '' }}>Tahun Terlama</option>
-      <option value="tahun_desc" {{ request('urutkan') == 'tahun_desc' ? 'selected' : '' }}>Tahun Terbaru</option>
+    <input type="text" id="search" placeholder="🔍 Cari buku..." value="{{ request('search') }}" onkeypress="if(event.key==='Enter') applyFilters()">
+    
+    <select id="searchType" onchange="updatePlaceholder(); applyFilters()">
+      <option value="all" {{ request('searchType')=='all'?'selected':'' }}>Semua Kolom</option>
+      <option value="judul" {{ request('searchType')=='judul'?'selected':'' }}>Judul</option>
+      <option value="penulis" {{ request('searchType')=='penulis'?'selected':'' }}>Penulis</option>
+      <option value="penerbit" {{ request('searchType')=='penerbit'?'selected':'' }}>Penerbit</option>
+      <option value="tahun_terbit" {{ request('searchType')=='tahun_terbit'?'selected':'' }}>Tahun Terbit</option>
     </select>
 
-    <!-- Dropdown Semua Kolom (termasuk Tahun Terbit) -->
-    <select id="kolom" onchange="applyFilters()">
-      <option value="">Semua Kolom</option>
-      <option value="judul" {{ request('kolom') == 'judul' ? 'selected' : '' }}>Judul</option>
-      <option value="penulis" {{ request('kolom') == 'penulis' ? 'selected' : '' }}>Penulis</option>
-      <option value="penerbit" {{ request('kolom') == 'penerbit' ? 'selected' : '' }}>Penerbit</option>
-      <option value="kategori" {{ request('kolom') == 'kategori' ? 'selected' : '' }}>Kategori</option>
-      <option value="tahun_terbit" {{ request('kolom') == 'tahun_terbit' ? 'selected' : '' }}>Tahun Terbit</option>
+    <select id="urutkan" onchange="applyFilters()">
+        <option value="">Urutkan</option>
+        <option value="judul_az" {{ request('sort')=='judul_az'?'selected':'' }}>Judul A-Z</option>
+        <option value="judul_za" {{ request('sort')=='judul_za'?'selected':'' }}>Judul Z-A</option>
+        <option value="terlama" {{ request('sort')=='terlama'?'selected':'' }}>Tahun Terlama</option>
+        <option value="terbaru" {{ request('sort')=='terbaru'?'selected':'' }}>Tahun Terbaru</option>
     </select>
   </div>
 
@@ -239,70 +160,63 @@
   <div class="books-container" id="book-list">
     @forelse($books as $book)
       <div class="book-card" style="cursor:pointer" onclick="window.location='{{ route('buku.show', $book->id) }}'">
-        @php
-          $covers = json_decode($book->cover, true);
-        @endphp
-
-        @if($covers && count($covers) > 0)
-          <img 
-            src="{{ asset('storage/' . $covers[0]) }}" 
-            data-covers='@json($covers)'
-            alt="{{ $book->judul }}" 
-            class="book-cover"
-          >
+        @php $covers = json_decode($book->cover,true); @endphp
+        @if($covers && count($covers)>0)
+          <img src="{{ asset('storage/'.$covers[0]) }}" data-covers='@json($covers)' alt="{{ $book->judul }}" class="book-cover">
         @else
           <img src="{{ asset('images/no-image.png') }}" alt="Tidak ada cover" class="book-cover">
         @endif
-
         <div class="book-title">{{ $book->judul }}</div>
         <div class="book-jenis">{{ $book->kategori }}</div>
         <div class="book-desc">{{ Str::limit($book->deskripsi, 60) }}</div>
       </div>
     @empty
-      <p class="text-center text-light fw-bold">Tidak ada buku yang ditemukan.</p>
+      <p class="text-center text-light fw-bold">Belum ada data buku 📚</p>
     @endforelse
   </div>
 
   <div class="d-flex justify-content-center mt-4">
     {{ $books->onEachSide(1)->appends(request()->query())->links('pagination::bootstrap-5') }}
   </div>
-
 </div>
 
-<footer>
-  <p>📍 Perpustakaan Teknik Universitas Bengkulu</p>
-  <iframe
-    src="https://www.google.com/maps?q=Universitas+Bengkulu&output=embed"
-    allowfullscreen>
-  </iframe>
-</footer>
+@include('components.footer')
 
 <script>
-  function applyFilters() {
-    const search = document.getElementById('search').value.trim();
-    const urutkan = document.getElementById('urutkan').value;
-    const kolom = document.getElementById('kolom').value;
-
-    const params = new URLSearchParams();
-    if (search) params.append('search', search);
-    if (urutkan) params.append('urutkan', urutkan);
-    if (kolom) params.append('kolom', kolom);
-
-    window.location.href = `/buku?${params.toString()}`;
+  function updatePlaceholder() {
+    const searchType = document.getElementById('searchType').value;
+    const search = document.getElementById('search');
+    switch(searchType) {
+        case 'judul': search.placeholder = "🔍 Cari Judul..."; break;
+        case 'penulis': search.placeholder = "🔍 Cari Penulis..."; break;
+        case 'penerbit': search.placeholder = "🔍 Cari Penerbit..."; break;
+        case 'tahun_terbit': search.placeholder = "🔍 Cari Tahun Terbit..."; break;
+        default: search.placeholder = "🔍 Cari buku..."; break;
+    }
   }
 
-  // 🎞️ Ganti cover otomatis setiap 3 detik (untuk setiap card)
-  document.addEventListener('DOMContentLoaded', function() {
-    const covers = document.querySelectorAll('.book-cover');
+  function applyFilters() {
+      const search = document.getElementById('search').value.trim();
+      const sort = document.getElementById('urutkan').value;
+      const searchType = document.getElementById('searchType').value;
 
+      const params = new URLSearchParams();
+      if (search) params.append('search', search);
+      if (sort) params.append('sort', sort);
+      if (searchType) params.append('searchType', searchType);
+
+      window.location.href = `/buku?${params.toString()}`;
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    updatePlaceholder();
+
+    const covers = document.querySelectorAll('.book-cover');
     covers.forEach(img => {
       const coverList = JSON.parse(img.dataset.covers || "[]");
-      if (coverList.length > 1) {
+      if(coverList.length > 1){
         let current = 0;
-        setInterval(() => {
-          current = (current + 1) % coverList.length;
-          img.src = `/storage/${coverList[current]}`;
-        }, 3000);
+        setInterval(()=>{current=(current+1)%coverList.length; img.src='/storage/'+coverList[current];},3000);
       }
     });
   });

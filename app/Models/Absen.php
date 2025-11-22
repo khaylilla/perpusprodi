@@ -12,8 +12,7 @@ class Absen extends Model
     protected $fillable = [
         'user_id',
         'nama',
-        'npm',
-        'prodi',
+        'npm', 
         'tanggal',
     ];
 }

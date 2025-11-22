@@ -86,70 +86,57 @@ class RiwayatController extends Controller
     }
 
     // Proses pengembalian
-  // Proses pengembalian
-public function prosesPengembalian(Request $request)
-{
-    $request->validate([
-        'npm' => 'required',
-        'nomor_buku' => 'required',
-    ]);
+    public function prosesPengembalian(Request $request)
+    {
+        $request->validate([
+            'npm' => 'required',
+            'nomor_buku' => 'required',
+        ]);
 
-    $npm = $request->npm;
-    $nomorBuku = $request->nomor_buku;
+        $npm = $request->npm;
+        $nomorBuku = $request->nomor_buku;
 
-    // Cari user
-    $user = User::where('npm', $npm)->first();
-    if (!$user) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'User tidak ditemukan.'
-        ], 404);
-    }
+        $user = User::where('npm', $npm)->first();
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User tidak ditemukan.'
+            ], 404);
+        }
 
-    // Cari buku
-    $book = Book::where('nomor_buku', $nomorBuku)->first();
-    if (!$book) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Buku tidak ditemukan.'
-        ], 404);
-    }
+        $book = Book::where('nomor_buku', $nomorBuku)->first();
+        if (!$book) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Buku tidak ditemukan.'
+            ], 404);
+        }
 
-    // Cek apakah buku sedang dipinjam oleh user
-    $peminjaman = Peminjaman::where('npm', $npm)
-        ->where('nomor_buku', $nomorBuku)
-        ->where('status', 'dipinjam')
-        ->first();
+        $peminjaman = Peminjaman::where('npm', $npm)
+            ->where('nomor_buku', $nomorBuku)
+            ->where('status', 'dipinjam')
+            ->first();
 
-    if (!$peminjaman) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Buku ini tidak sedang dipinjam oleh anggota.'
-        ], 400);
-    }
+        if (!$peminjaman) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Buku ini tidak sedang dipinjam oleh anggota.'
+            ], 400);
+        }
 
-    // Tambah jumlah buku
-    $book->jumlah += 1;
-    $book->status = 'tersedia';
-    $book->save();
+        $book->jumlah += 1;
+        $book->status = 'tersedia';
+        $book->save();
 
-    // Update status peminjaman
-$peminjaman = Peminjaman::where('npm', $npm)
-        ->where('nomor_buku', $nomorBuku)
-        ->where('status', 'dipinjam')
-        ->first();
-   if ($peminjaman) {
         $peminjaman->status = 'dikembalikan';
         $peminjaman->tanggal_kembali = now();
         $peminjaman->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Buku berhasil dikembalikan.'
+        ]);
     }
-
-    return response()->json([
-        'status' => 'success',
-        'message' => 'Buku berhasil dikembalikan.'
-    ]);
-}
-
 
     // Halaman manajemen riwayat (3 kotak)
     public function datariwayat()
@@ -158,9 +145,28 @@ $peminjaman = Peminjaman::where('npm', $npm)
     }
 
     // Halaman daftar peminjaman
-    public function indexPeminjaman()
+    public function indexPeminjaman(Request $request)
     {
-        $peminjaman = Peminjaman::all();
+        $query = Peminjaman::query();
+
+        // SEARCH
+        if ($request->filled('keyword')) {
+            $keyword = $request->keyword;
+            $query->where(function($q) use ($keyword) {
+                $q->where('nama', 'like', "%{$keyword}%")
+                  ->orWhere('npm', 'like', "%{$keyword}%")
+                  ->orWhere('judul_buku', 'like', "%{$keyword}%")
+                  ->orWhere('nomor_buku', 'like', "%{$keyword}%");
+            });
+        }
+
+        // FILTER STATUS
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $peminjaman = $query->orderBy('tanggal_pinjam', 'desc')->get();
+
         return view('admin.riwayat.peminjaman.peminjaman', compact('peminjaman'));
     }
 
@@ -169,13 +175,26 @@ $peminjaman = Peminjaman::where('npm', $npm)
     {
         $query = Peminjaman::query();
 
-        if ($request->status) {
+        // SEARCH
+        if ($request->filled('keyword')) {
+            $keyword = $request->keyword;
+            $query->where(function($q) use ($keyword) {
+                $q->where('nama', 'like', "%{$keyword}%")
+                  ->orWhere('npm', 'like', "%{$keyword}%")
+                  ->orWhere('judul_buku', 'like', "%{$keyword}%")
+                  ->orWhere('nomor_buku', 'like', "%{$keyword}%");
+            });
+        }
+
+        // FILTER STATUS
+        if ($request->filled('status')) {
             $query->where('status', $request->status);
         } else {
             $query->where('status', 'dikembalikan');
         }
 
         $peminjaman = $query->orderBy('tanggal_kembali', 'desc')->get();
+
         return view('admin.riwayat.pengembalian.pengembalian', compact('peminjaman'));
     }
 
@@ -260,9 +279,7 @@ $peminjaman = Peminjaman::where('npm', $npm)
     // Export PDF peminjaman
     public function exportPdf(Request $request)
     {
-        // Ambil semua peminjaman yang statusnya 'Dipinjam' saja
         $peminjaman = Peminjaman::where('status', 'Dipinjam')->get();
-
         $pdf = \PDF::loadView('admin.riwayat.peminjaman.pdf', compact('peminjaman'));
         return $pdf->download('peminjaman_dipinjam.pdf');
     }
@@ -274,7 +291,5 @@ $peminjaman = Peminjaman::where('npm', $npm)
         $pdf = \PDF::loadView('admin.riwayat.pengembalian.pdfkembali', compact('peminjaman'))
           ->setPaper('a4', 'landscape');
         return $pdf->download('data_pengembalian.pdf');
-    }  
-
-    
+    }
 }

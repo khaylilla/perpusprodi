@@ -5,13 +5,8 @@
 @section('content')
 {{-- STYLE TAMBAHAN --}}
 <style>
-  .info-boxes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    margin-bottom: 25px;
-  }
-
+  /* Info Boxes */
+  .info-boxes { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 25px; }
   .info-box {
     background: linear-gradient(135deg, #e53935, #ff7043);
     color: white;
@@ -25,12 +20,12 @@
     text-decoration: none;
     transition: transform 0.2s ease;
   }
-
   .info-box:hover { transform: translateY(-3px); }
   .info-box i { font-size: 32px; opacity: 0.8; }
   .info-box-content h5 { margin: 0; font-weight: 700; font-size: 16px; }
   .info-box-content p { font-size: 13px; margin: 3px 0 0 0; }
 
+  /* Table Container */
   .table-container {
     background-color: white;
     border-radius: 12px;
@@ -53,69 +48,101 @@
   .badge { font-size: 0.85em; }
   .action-icons i { cursor: pointer; font-size: 18px; margin: 0 5px; }
   .action-icons i:hover { opacity: 0.7; }
+
+  /* Search Bar */
+  .search-bar {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 80%;
+  }
+  .search-bar input {
+    border: none;
+    outline: none;
+    flex: 1;
+    font-size: 15px;
+    padding-left: 8px;
+  }
+  .search-bar .btn { white-space: nowrap; }
 </style>
 
-  {{-- TOMBOL TAMBAH & PDF --}}
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
-        <i class="bi bi-plus-lg"></i> Tambah Denda
-      </button>
-    </div>
-    <a href="#" id="downloadPdf" class="btn btn-success"><i class="bi bi-file-earmark-pdf"></i> Download PDF</a>
-  </div>
+{{-- SEARCH BAR --}}
+<form action="{{ route('admin.riwayat.denda.index') }}" method="GET" class="search-bar w-100 mb-3">
+    <i class="bi bi-search"></i>
+    <input type="text" name="keyword" placeholder="Cari Nama Anggota, NPM, judul buku..." value="{{ request('keyword') }}">
+    <button type="submit" class="btn btn-primary btn-sm ms-2">Cari</button>
+</form>
 
-  {{-- TABEL DENDA --}}
-  <div class="table-container">
+{{-- SORT & FILTER BAR --}}
+<div class="sort-filter-bar mb-3">
+    <label for="filter-date" class="fw-semibold me-2">Pilih Tanggal Pinjam:</label>
+    <input type="date" id="filter-date" class="form-control d-inline-block" style="width:auto;">
+</div>
+
+{{-- TOMBOL TAMBAH & PDF --}}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
+        <i class="bi bi-plus-lg"></i> Tambah Denda
+    </button>
+    <a href="#" id="downloadPdf" class="btn btn-success">
+        <i class="bi bi-file-earmark-pdf"></i> Download PDF
+    </a>
+</div>
+
+{{-- TABEL DENDA --}}
+<div class="table-container">
     <table class="table table-bordered">
-      <thead>
-        <tr>
-          <th>No</th>
-          <th>Nama</th>
-          <th>NPM</th>
-          <th>Judul Buku</th>
-          <th>Nomor Buku</th>
-          <th>Tanggal Pinjam</th>
-          <th>Tanggal Kembali</th>
-          <th>Hari Terlambat</th>
-          <th>Total Denda</th>
-          <th>Aksi</th>
-        </tr>
-      </thead>
-      <tbody>
-        @forelse ($denda as $index => $item)
-          <tr 
-            data-id="{{ $item->id }}" 
-            data-nama="{{ $item->nama }}" 
-            data-npm="{{ $item->npm }}" 
-            data-judul="{{ $item->judul_buku }}" 
-            data-nomor="{{ $item->nomor_buku }}" 
-            data-pinjam="{{ $item->tanggal_pinjam }}" 
-            data-kembali="{{ $item->tanggal_kembali }}" 
-            data-hari="{{ $item->hari_terlambat }}" 
-            data-total="{{ $item->total_denda }}">
-            <td>{{ $index + 1 }}</td>
-            <td>{{ $item->nama }}</td>
-            <td>{{ $item->npm }}</td>
-            <td>{{ $item->judul_buku }}</td>
-            <td>{{ $item->nomor_buku }}</td>
-            <td>{{ $item->tanggal_pinjam }}</td>
-            <td>{{ $item->tanggal_kembali }}</td>
-            <td><span class="badge bg-warning text-dark">{{ $item->hari_terlambat }} hari</span></td>
-            <td><span class="badge bg-danger">Rp {{ number_format($item->total_denda, 0, ',', '.') }}</span></td>
-            <td class="action-icons">
-              <i class="bi bi-pencil-square text-primary btn-edit" title="Edit"></i>
-              <i class="bi bi-trash text-danger btn-delete" title="Hapus"></i>
-            </td>
-          </tr>
-        @empty
-          <tr>
-            <td colspan="10" class="text-center text-muted">Tidak ada data denda 📚</td>
-          </tr>
-        @endforelse
-      </tbody>
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>Nama</th>
+                <th>NPM</th>
+                <th>Judul Buku</th>
+                <th>Nomor Buku</th>
+                <th>Tanggal Pinjam</th>
+                <th>Tanggal Kembali</th>
+                <th>Hari Terlambat</th>
+                <th>Total Denda</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse ($denda as $index => $item)
+            <tr data-id="{{ $item->id }}"
+                data-nama="{{ $item->nama }}"
+                data-npm="{{ $item->npm }}"
+                data-judul="{{ $item->judul_buku }}"
+                data-nomor="{{ $item->nomor_buku }}"
+                data-pinjam="{{ $item->tanggal_pinjam }}"
+                data-kembali="{{ $item->tanggal_kembali }}"
+                data-hari="{{ $item->hari_terlambat }}"
+                data-total="{{ $item->total_denda }}">
+                <td>{{ $index + 1 }}</td>
+                <td>{{ $item->nama }}</td>
+                <td>{{ $item->npm }}</td>
+                <td>{{ $item->judul_buku }}</td>
+                <td>{{ $item->nomor_buku }}</td>
+                <td>{{ $item->tanggal_pinjam }}</td>
+                <td>{{ $item->tanggal_kembali }}</td>
+                <td><span class="badge bg-warning text-dark">{{ $item->hari_terlambat }} hari</span></td>
+                <td><span class="badge bg-danger">Rp {{ number_format($item->total_denda,0,',','.') }}</span></td>
+                <td class="action-icons">
+                    <i class="bi bi-pencil-square text-primary btn-edit" title="Edit"></i>
+                    <i class="bi bi-trash text-danger btn-delete" title="Hapus"></i>
+                </td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="10" class="text-center text-muted">Belum ada data denda 📚</td>
+            </tr>
+            @endforelse
+        </tbody>
     </table>
-  </div>
 </div>
 
 {{-- MODAL TAMBAH --}}
@@ -129,38 +156,14 @@
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <div class="mb-2">
-            <label>Nama</label>
-            <input type="text" name="nama" class="form-control" required>
-          </div>
-          <div class="mb-2">
-            <label>NPM</label>
-            <input type="text" name="npm" class="form-control" required>
-          </div>
-          <div class="mb-2">
-            <label>Judul Buku</label>
-            <input type="text" name="judul_buku" class="form-control" required>
-          </div>
-          <div class="mb-2">
-            <label>Nomor Buku</label>
-            <input type="text" name="nomor_buku" class="form-control" required>
-          </div>
-          <div class="mb-2">
-            <label>Tanggal Pinjam</label>
-            <input type="date" name="tanggal_pinjam" class="form-control" required>
-          </div>
-          <div class="mb-2">
-            <label>Tanggal Kembali</label>
-            <input type="date" name="tanggal_kembali" class="form-control" required>
-          </div>
-          <div class="mb-2">
-            <label>Hari Terlambat</label>
-            <input type="number" name="hari_terlambat" class="form-control" required>
-          </div>
-          <div class="mb-2">
-            <label>Total Denda</label>
-            <input type="number" name="total_denda" class="form-control" required>
-          </div>
+          <div class="mb-2"><label>Nama</label><input type="text" name="nama" class="form-control" required></div>
+          <div class="mb-2"><label>NPM</label><input type="text" name="npm" class="form-control" required></div>
+          <div class="mb-2"><label>Judul Buku</label><input type="text" name="judul_buku" class="form-control" required></div>
+          <div class="mb-2"><label>Nomor Buku</label><input type="text" name="nomor_buku" class="form-control" required></div>
+          <div class="mb-2"><label>Tanggal Pinjam</label><input type="date" name="tanggal_pinjam" class="form-control" required></div>
+          <div class="mb-2"><label>Tanggal Kembali</label><input type="date" name="tanggal_kembali" class="form-control" required></div>
+          <div class="mb-2"><label>Hari Terlambat</label><input type="number" name="hari_terlambat" class="form-control" required></div>
+          <div class="mb-2"><label>Total Denda</label><input type="number" name="total_denda" class="form-control" required></div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
@@ -201,7 +204,7 @@
   </div>
 </div>
 
-{{-- SCRIPT MODAL --}}
+{{-- SCRIPT MODAL & HAPUS --}}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
 

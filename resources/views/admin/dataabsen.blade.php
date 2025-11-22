@@ -138,6 +138,47 @@
   </div>
 </a>
 
+{{-- 3 KOTAK KECIL --}}
+<div class="d-flex flex-wrap gap-3 mb-4">
+
+  <a href="{{ route('admin.absen.scan') }}" 
+     class="text-decoration-none"
+     style="width: 180px;">
+    <div class="card shadow-sm border-0 text-white"
+         style="background: #ff9f43; border-radius: 14px;">
+      <div class="card-body text-center p-3">
+        <i class="bi bi-qr-code-scan fs-2 d-block mb-2"></i>
+        <p class="fw-bold mb-0">Scan Absen</p>
+      </div>
+    </div>
+  </a>
+
+  <a href="{{ route('admin.dataabsen') }}" 
+     class="text-decoration-none"
+     style="width: 180px;">
+    <div class="card shadow-sm border-0 text-white"
+         style="background: #ff9f43; border-radius: 14px;">
+      <div class="card-body text-center p-3">
+        <i class="bi bi-table fs-2 d-block mb-2"></i>
+        <p class="fw-bold mb-0">Data Absen</p>
+      </div>
+    </div>
+  </a>
+
+  <a href="{{ route('admin.kartu.generate') }}" 
+     class="text-decoration-none"
+     style="width: 180px;">
+    <div class="card shadow-sm border-0 text-white"
+         style="background: #ff9f43; border-radius: 14px;">
+      <div class="card-body text-center p-3">
+        <i class="bi bi-credit-card-2-back-fill fs-2 d-block mb-2"></i>
+        <p class="fw-bold mb-0">Generate Kartu</p>
+      </div>
+    </div>
+  </a>
+
+</div>
+
     {{-- BUTTON TAMBAH --}}
     <div class="d-flex align-items-center ms-auto mb-3">
       <button class="btn btn-add" data-bs-toggle="modal" data-bs-target="#createAbsenModal">
@@ -161,112 +202,103 @@
   {{-- FILTER DAN PRINT --}}
   <div class="d-flex justify-content-between align-items-center mb-3">
     <form action="{{ route('admin.dataabsen') }}" method="GET" class="d-flex align-items-center gap-2 mb-0">
-      <label for="group_by" class="fw-semibold mb-0">Sort:</label>
-      <select name="group_by" id="group_by" class="form-select form-select-sm" onchange="this.form.submit()">
-        <option value="day"  {{ ($groupBy ?? 'day') == 'day' ? 'selected' : '' }}>Harian</option>
-        <option value="month"{{ ($groupBy ?? '') == 'month' ? 'selected' : '' }}>Bulanan</option>
-        <option value="year" {{ ($groupBy ?? '') == 'year' ? 'selected' : '' }}>Tahunan</option>
-      </select>
-    </form>
+
+        <label class="fw-semibold mb-0">Filter Tanggal:</label>
+
+        <input type="date" name="start_date" class="form-control form-control-sm"
+              value="{{ request('start_date') }}"
+              style="width: 160px;">
+
+        <span class="fw-bold">s/d</span>
+
+        <input type="date" name="end_date" class="form-control form-control-sm"
+              value="{{ request('end_date') }}"
+              style="width: 160px;">
+
+        <button class="btn btn-primary btn-sm ms-2">Terapkan</button>
+
+      </form>
+
 
     <a href="{{ route('admin.dataabsen.print', ['group_by' => ($groupBy ?? 'day')]) }}" class="btn btn-danger">
       <i class="bi bi-file-earmark-pdf"></i> Cetak PDF
     </a>
   </div>
 
-  {{-- TABEL DATA (dikelompokkan) --}}
-  <div class="table-container">
-    @forelse(($groupedAbsens ?? collect()) as $group => $items)
-      <div class="p-3 bg-light border-start border-4 border-warning mb-2 rounded">
-        <h6 class="fw-bold text-secondary mb-0">
-          @if(($groupBy ?? 'day') == 'day')
-            {{ \Carbon\Carbon::parse($group)->translatedFormat('d F Y') }}
-          @elseif(($groupBy ?? '') == 'month')
-            {{ \Carbon\Carbon::parse($group . '-01')->translatedFormat('F Y') }}
-          @else
-            Tahun {{ $group }}
-          @endif
-        </h6>
-      </div>
+{{-- TABEL DATA --}}
+<div class="table-container">
+  <table class="table text-center align-middle mb-4">
+    <thead>
+      <tr>
+        <th style="width:60px;">No</th>
+        <th>Nama</th>
+        <th>NPM</th>
+        <th>Tanggal Absen</th>
+        <th style="width:120px;">Aksi</th>
+      </tr>
+    </thead>
+    <tbody>
+      @forelse($absens as $i => $absen)
+        <tr>
+          <td>{{ $i + 1 }}</td>
+          <td>{{ $absen->nama }}</td>
+          <td>{{ $absen->npm }}</td>
+          <td>{{ $absen->tanggal }}</td>
+          <td class="action-icons">
+            <!-- Edit -->
+            <i class="bi bi-pencil-square edit" data-bs-toggle="modal" data-bs-target="#editAbsenModal{{ $absen->id }}" title="Edit"></i>
+            <!-- Delete -->
+            <form action="{{ route('admin.dataabsen.delete', $absen->id) }}" method="POST" class="d-inline">
+              @csrf
+              @method('DELETE')
+              <button type="submit" class="btn p-0 border-0 bg-transparent" onclick="return confirm('Yakin hapus absen ini?')">
+                <i class="bi bi-trash delete" title="Hapus"></i>
+              </button>
+            </form>
+          </td>
+        </tr>
 
-      <table class="table text-center align-middle mb-4">
-        <thead>
-          <tr>
-            <th style="width:60px;">No</th>
-            <th>Nama</th>
-            <th>NPM</th>
-            <th>Prodi</th>
-            <th>Tanggal Absen</th>
-            <th style="width:120px;">Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          @foreach($items as $i => $absen)
-            <tr>
-              <td>{{ $i + 1 }}</td>
-              <td>{{ $absen->nama }}</td>
-              <td>{{ $absen->npm }}</td>
-              <td>{{ $absen->prodi ?? '-' }}</td>
-              <td>{{ $absen->tanggal }}</td>
-              <td class="action-icons">
-                <!-- Edit -->
-                <i class="bi bi-pencil-square edit" data-bs-toggle="modal" data-bs-target="#editAbsenModal{{ $absen->id }}" title="Edit"></i>
-
-                <!-- Delete -->
-                <form action="{{ route('admin.dataabsen.delete', $absen->id) }}" method="POST" class="d-inline">
-                  @csrf
-                  @method('DELETE')
-                  <button type="submit" class="btn p-0 border-0 bg-transparent" onclick="return confirm('Yakin hapus absen ini?')">
-                    <i class="bi bi-trash delete" title="Hapus"></i>
-                  </button>
-                </form>
-              </td>
-            </tr>
-
-            {{-- MODAL EDIT untuk setiap baris --}}
-            <div class="modal fade" id="editAbsenModal{{ $absen->id }}" tabindex="-1" aria-hidden="true">
-              <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                  <div class="modal-header bg-warning">
-                    <h5 class="modal-title">Edit Absen</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                  </div>
-                  <form action="{{ route('admin.dataabsen.update', $absen->id) }}" method="POST">
-                    @csrf
-                    @method('PUT')
-                    <div class="modal-body">
-                      <div class="mb-3">
-                        <label>Nama</label>
-                        <input type="text" name="nama" class="form-control" value="{{ $absen->nama }}" required>
-                      </div>
-                      <div class="mb-3">
-                        <label>NPM</label>
-                        <input type="text" name="npm" class="form-control" value="{{ $absen->npm }}" required>
-                      </div>
-                      <div class="mb-3">
-                        <label>Program Studi</label>
-                        <input type="text" name="prodi" class="form-control" required>
-                      </div>
-                      <div class="mb-3">
-                        <label>Tanggal Absen</label>
-                        <input type="date" name="tanggal" class="form-control" value="{{ $absen->tanggal }}" required>
-                      </div>
-                    </div>
-                    <div class="modal-footer">
-                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                      <button type="submit" class="btn btn-warning">Simpan</button>
-                    </div>
-                  </form>
-                </div>
+        {{-- MODAL EDIT --}}
+        <div class="modal fade" id="editAbsenModal{{ $absen->id }}" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header bg-warning">
+                <h5 class="modal-title">Edit Absen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
               </div>
+              <form action="{{ route('admin.dataabsen.update', $absen->id) }}" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                  <div class="mb-3">
+                    <label>Nama</label>
+                    <input type="text" name="nama" class="form-control" value="{{ $absen->nama }}" required>
+                  </div>
+                  <div class="mb-3">
+                    <label>NPM</label>
+                    <input type="text" name="npm" class="form-control" value="{{ $absen->npm }}" required>
+                  </div>
+                  <div class="mb-3">
+                    <label>Tanggal Absen</label>
+                    <input type="date" name="tanggal" class="form-control" value="{{ $absen->tanggal }}" required>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                  <button type="submit" class="btn btn-warning">Simpan</button>
+                </div>
+              </form>
             </div>
-          @endforeach
-        </tbody>
-      </table>
-    @empty
-      <p class="text-center text-muted p-3">Belum ada data absen</p>
-    @endforelse
-  </div>
+          </div>
+        </div>
+
+      @empty
+        <tr>
+          <td colspan="5" class="text-center text-muted">Belum ada data absen</td>
+        </tr>
+      @endforelse
+    </tbody>
+  </table>
 </div>
 
 {{-- MODAL TAMBAH ABSEN --}}
@@ -287,10 +319,6 @@
           <div class="mb-3">
             <label>NPM</label>
             <input type="text" name="npm" class="form-control" required>
-          </div>
-          <div class="mb-3">
-            <label>Program Studi</label>
-            <input type="text" name="prodi" class="form-control" required>
           </div>
           <div class="mb-3">
             <label>Tanggal Absen</label>

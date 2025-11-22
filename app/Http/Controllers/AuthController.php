@@ -60,6 +60,22 @@ class AuthController extends Controller
         ]);
 }
 
+public function index()
+{
+    $books = Book::latest()->take(4)->get();        // Koleksi buku terbaru
+    $artikels = Artikel::latest()->take(4)->get();  // Artikel & Jurnal terbaru
+
+    // 🔥 Tambahkan ini (TOP 5 buku paling sering dipinjam)
+    $bukuFavorit = Peminjaman::selectRaw('judul_buku, COUNT(*) as total')
+        ->groupBy('judul_buku')
+        ->orderBy('total', 'desc')
+        ->limit(5)
+        ->get();
+
+    return view('auth.home', compact('books', 'artikels', 'bukuFavorit'));
+}
+
+
     // ✅ Menampilkan kartu anggota
     public function showCard($id)
     {

@@ -237,47 +237,60 @@ function prosesPeminjaman(){
   const nomorBuku = document.getElementById("barcodeBuku").value.trim();
 
   if(!npm || !nomorBuku){ 
-    Swal.fire({
-      icon: 'warning',
-      title: 'Oops!',
-      text: 'Pastikan kedua barcode telah di-scan!'
-    });
+    Swal.fire({icon:'warning', title:'Oops!', text:'Pastikan kedua barcode telah di-scan!'}); 
     return; 
   }
 
-  fetch("{{ route('admin.riwayat.peminjaman.proses') }}",{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      "X-CSRF-TOKEN":"{{ csrf_token() }}"
+  fetch("{{ route('admin.riwayat.peminjaman.proses') }}", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRF-TOKEN": "{{ csrf_token() }}"
     },
-    body:JSON.stringify({npm:npm, nomor_buku:nomorBuku})
+    body: JSON.stringify({npm:npm, nomor_buku:nomorBuku})
   })
-  .then(res => res.json())
-  .then(data => {
+  .then(res => res.json().then(data => ({ status: res.status, body: data })))
+  .then(({status, body}) => {
+    if (status === 200) {
+  // jika pesan dari server berisi kata "habis" atau "stok 0", ubah jadi error
+  if (body.message.toLowerCase().includes('habis') || body.message.toLowerCase().includes('stok 0')) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Gagal!',
+      text: body.message,
+      confirmButtonColor: '#f7931e'
+    });
+  } else {
     Swal.fire({
       icon: 'success',
       title: 'Berhasil!',
-      text: data.message ?? "Data peminjaman berhasil disimpan.",
+      text: body.message,
       confirmButtonColor: '#f7931e'
     }).then(() => {
-      // setelah klik OK, redirect ke halaman peminjaman
-      window.location.href = "{{ route('admin.riwayat.peminjaman.peminjaman') }}";
+      window.location.reload();
     });
+  }
 
-    // reset field input
-    document.getElementById("barcodeAnggota").value = "";
-    document.getElementById("barcodeBuku").value = "";
-    document.getElementById("namaAnggota").textContent = "-";
-    document.getElementById("judulBuku").textContent = "-";
-    document.getElementById("stokBuku").textContent = "-";
+  document.getElementById("barcodeAnggota").value="";
+  document.getElementById("barcodeBuku").value="";
+  document.getElementById("namaAnggota").textContent="-";
+  document.getElementById("judulBuku").textContent="-";
+}
+ else {
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal!',
+        text: body.message,
+        confirmButtonColor: '#f7931e'
+      });
+    }
   })
-  .catch(err => {
+  .catch(()=>{
     Swal.fire({
-      icon: 'error',
-      title: 'Gagal',
-      text: 'Gagal mengirim data ke server.',
-      confirmButtonColor: '#f7931e'
+      icon:'error', 
+      title:'Gagal', 
+      text:'Gagal mengirim data ke server.', 
+      confirmButtonColor:'#f7931e'
     });
   });
 }

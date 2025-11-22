@@ -190,7 +190,12 @@ function prosesPengembalian(){
   const nomorBuku = document.getElementById("barcodeBuku").value.trim();
 
   if(!npm || !nomorBuku){ 
-    Swal.fire({icon:'warning', title:'Oops!', text:'Pastikan kedua barcode telah di-scan!'}); return; 
+    Swal.fire({
+      icon:'warning', 
+      title:'Oops!', 
+      text:'Pastikan kedua barcode telah di-scan!'
+    }); 
+    return; 
   }
 
   fetch("{{ route('admin.riwayat.pengembalian.proses') }}",{
@@ -203,21 +208,37 @@ function prosesPengembalian(){
   })
   .then(res => res.json())
   .then(data => {
-    Swal.fire({
-      icon: 'success',
-      title: 'Berhasil!',
-      text: data.message ?? "Buku berhasil dikembalikan.",
-      confirmButtonColor: '#f7931e'
-    }).then(() => {
-      window.location.href = "{{ route('admin.riwayat.pengembalian.pengembalian') }}";
-    });
+    if(data.status === "error"){ // stok habis atau gagal lainnya
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal!',
+        text: data.message ?? "Stok buku habis / gagal memproses.",
+        confirmButtonColor: '#f7931e'
+      });
+    } else { // sukses
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: data.message ?? "Buku berhasil dikembalikan.",
+        confirmButtonColor: '#f7931e'
+      }).then(() => {
+        window.location.href = "{{ route('admin.riwayat.pengembalian.pengembalian') }}";
+      });
 
-    document.getElementById("barcodeAnggota").value="";
-    document.getElementById("barcodeBuku").value="";
-    document.getElementById("namaAnggota").textContent="-";
-    document.getElementById("judulBuku").textContent="-";
+      // reset form
+      document.getElementById("barcodeAnggota").value="";
+      document.getElementById("barcodeBuku").value="";
+      document.getElementById("namaAnggota").textContent="-";
+      document.getElementById("judulBuku").textContent="-";
+    }
   })
-  .catch(()=>Swal.fire({icon:'error', title:'Gagal', text:'Gagal mengirim data ke server.', confirmButtonColor:'#f7931e'}));
+  .catch(()=>Swal.fire({
+    icon:'error', 
+    title:'Gagal', 
+    text:'Gagal mengirim data ke server.', 
+    confirmButtonColor:'#f7931e'
+  }));
 }
+
 </script>
 @endsection

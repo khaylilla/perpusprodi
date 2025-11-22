@@ -67,7 +67,7 @@
             </tr>
         </thead>
         <tbody>
-            @forelse($peminjaman as $index => $p)
+            @forelse($peminjaman->where('status', 'dikembalikan') as $index => $p)
             <tr>
                 <td>{{ $index + 1 }}</td>
                 <td>{{ $p->nama }}</td>

@@ -160,24 +160,6 @@
     box-shadow: 0 4px 12px rgba(255, 184, 77, 0.4);
   }
 
-  /* 📍 Footer */
-  footer {
-    margin-top: 60px;
-    background: rgba(0, 0, 0, 0.85);
-    color: white;
-    padding: 40px;
-    text-align: center;
-    border-top: 4px solid #ffb84d;
-  }
-
-  footer iframe {
-    border: 0;
-    width: 100%;
-    height: 180px;
-    border-radius: 12px;
-    margin-top: 15px;
-  }
-
   @media (max-width: 768px) {
     .book-card {
       flex-direction: column;
@@ -238,15 +220,9 @@
       </div>
     </div>
   </div>
-
-  <footer>
-    <p>📍 Perpustakaan Teknik Universitas Bengkulu</p>
-    <iframe
-      src="https://www.google.com/maps?q=Universitas+Bengkulu&output=embed"
-      allowfullscreen>
-    </iframe>
-  </footer>
 </div>
+
+@include('components.footer')
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
